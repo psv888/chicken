@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import ReactModal from 'react-modal';
 import './RestaurantsPage.css';
 import { useCart } from '../CartContext';
+import ReviewSection from './ReviewSection';
 
 export default function BiryaniPage() {
   const [biryani, setBiryani] = useState([]);
@@ -16,6 +17,7 @@ export default function BiryaniPage() {
   const [checkoutStep, setCheckoutStep] = useState('cart');
   const [orderDetails, setOrderDetails] = useState({ name: '', phone: '', address: '' });
   const [orderId, setOrderId] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
 
   ReactModal.setAppElement('#root');
 
@@ -30,6 +32,12 @@ export default function BiryaniPage() {
       setLoading(false);
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data?.user || null);
+    });
   }, []);
 
   const openMenuModal = async (parent) => {
@@ -166,6 +174,7 @@ export default function BiryaniPage() {
                   </div>
                 ))}
             </div>
+            <ReviewSection user={currentUser} restaurantId={menuModalParent.id} />
           </>
         )}
       </ReactModal>

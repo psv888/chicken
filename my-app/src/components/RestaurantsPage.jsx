@@ -5,6 +5,7 @@ import './RestaurantsPage.css';
 import { useCart } from '../CartContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements, PaymentRequestButtonElement } from '@stripe/react-stripe-js';
+import ReviewSection from './ReviewSection';
 
 const stripePromise = loadStripe('pk_test_51RbTpBGapGv2lLdZZYPUYMxOFi6DqmNMGjbquTXRHVl1NUVHN2VwQpESinh48gBTAlvWCSfpXeUINTUTHWL5INdd00MrvxF4qR');
 
@@ -132,6 +133,7 @@ export default function RestaurantsPage() {
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'form' | 'confirm'
   const [orderDetails, setOrderDetails] = useState({ name: '', phone: '', address: '' });
   const [orderId, setOrderId] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
 
   ReactModal.setAppElement('#root');
 
@@ -146,6 +148,12 @@ export default function RestaurantsPage() {
       setLoading(false);
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data?.user || null);
+    });
   }, []);
 
   const openMenuModal = async (parent) => {
@@ -283,6 +291,7 @@ export default function RestaurantsPage() {
                   </div>
                 ))}
             </div>
+            <ReviewSection user={currentUser} restaurantId={menuModalParent.id} />
           </>
         )}
       </ReactModal>

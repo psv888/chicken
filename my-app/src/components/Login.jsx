@@ -22,20 +22,17 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', formData.email)
-            .maybeSingle();
-        console.log('User data from Supabase:', data, error);
+        // Use Supabase Auth for login
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+        });
         if (error) {
-            setError('An error occurred. Please try again.');
-        } else if (!data) {
-            setError('No user found with this email');
-        } else if (data.password !== formData.password) {
-            setError('Incorrect password');
-        } else {
+            setError(error.message || 'Login failed.');
+        } else if (data && data.user) {
             navigate('/home');
+        } else {
+            setError('Login failed.');
         }
     };
 

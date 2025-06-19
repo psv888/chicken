@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './Register.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        fullname: '',
         email: '',
         password: '',
+        name: '',
         phone: ''
     });
-    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,40 +23,48 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage('');
         setError('');
-        // Insert user data into Supabase
-        const { data, error } = await supabase
-            .from('users')
-            .insert([
+        // Register with Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+        });
+        if (error) {
+            setError(error.message || 'Registration failed.');
+            return;
+        }
+        // Insert user profile into users table
+        if (data && data.user) {
+            const { error: profileError } = await supabase.from('users').insert([
                 {
-                    fullname: formData.fullname,
+                    user_id: data.user.id, // use uuid from auth
                     email: formData.email,
-                    password: formData.password, // For demo only! Hash in production.
-                    phone: formData.phone
+                    name: formData.name,
+                    phone: formData.phone,
                 }
             ]);
-        if (error) {
-            setError(error.message);
+            if (profileError) {
+                setError('Profile creation failed: ' + profileError.message);
+                return;
+            }
+            navigate('/login');
         } else {
-            setMessage('Registration successful!');
-            setFormData({ fullname: '', email: '', password: '', phone: '' });
+            setError('Registration failed.');
         }
     };
 
     return (
         <div className="container">
             <form className="registration-form" onSubmit={handleSubmit}>
-                <h2>Registration Form</h2>
-                {message && <div className="success-message">{message}</div>}
+                <h2>Register</h2>
                 {error && <div className="error-message">{error}</div>}
                 <div className="form-group">
-                    <label htmlFor="fullname">Full Name</label>
+                    <label htmlFor="name">Name</label>
                     <input
                         type="text"
-                        id="fullname"
-                        name="fullname"
-                        value={formData.fullname}
+                        id="name"
+                        name="name"
+                        value={formData.name}
                         onChange={handleChange}
                         required
                     />
@@ -73,23 +81,23 @@ const Register = () => {
                     />
                 </div>
                 <div className="form-group">
+                    <label htmlFor="phone">Phone</label>
+                    <input
+                        type="text"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="form-group">
                     <label htmlFor="password">Password</label>
                     <input
                         type="password"
                         id="password"
                         name="password"
                         value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="phone">Phone Number</label>
-                    <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
                         onChange={handleChange}
                         required
                     />
