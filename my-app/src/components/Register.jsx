@@ -8,36 +8,43 @@ const Register = () => {
         email: '',
         password: '',
         name: '',
-        phone: ''
+        phone: '',
+        vehicleDetails: ''
     });
+    const [isDelivery, setIsDelivery] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
+        const { name, value, type, checked } = e.target;
+        if (type === 'checkbox') {
+            setIsDelivery(checked);
+        } else {
+            setFormData(prevState => ({
+                ...prevState,
+                [name]: value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         // Register with Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
         });
-        if (error) {
-            setError(error.message || 'Registration failed.');
+        if (authError) {
+            setError(authError.message || 'Registration failed.');
             return;
         }
         // Insert user profile into users table
-        if (data && data.user) {
+        if (authData && authData.user) {
+            const user = authData.user;
             const { error: profileError } = await supabase.from('users').insert([
                 {
-                    user_id: data.user.id, // use uuid from auth
+                    user_id: user.id, // use uuid from auth
                     email: formData.email,
                     name: formData.name,
                     phone: formData.phone,
@@ -46,6 +53,21 @@ const Register = () => {
             if (profileError) {
                 setError('Profile creation failed: ' + profileError.message);
                 return;
+            }
+            // If they are a delivery person, insert into 'delivery_personnel' table
+            if (isDelivery) {
+                const { error: deliveryError } = await supabase.from('delivery_personnel').insert([
+                    {
+                        user_id: user.id, // Foreign key from auth.users
+                        full_name: formData.name,
+                        phone_number: formData.phone,
+                        vehicle_details: formData.vehicleDetails
+                    }
+                ]);
+                if (deliveryError) {
+                    setError('Delivery personnel registration failed: ' + deliveryError.message);
+                    return;
+                }
             }
             navigate('/login');
         } else {
@@ -102,6 +124,33 @@ const Register = () => {
                         required
                     />
                 </div>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="isDelivery"
+                            checked={isDelivery}
+                            onChange={handleChange}
+                        />
+                        Register as a Delivery Person
+                    </label>
+                </div>
+
+                {isDelivery && (
+                    <div className="form-group">
+                        <label htmlFor="vehicleDetails">Vehicle Details</label>
+                        <input
+                            type="text"
+                            id="vehicleDetails"
+                            name="vehicleDetails"
+                            value={formData.vehicleDetails}
+                            onChange={handleChange}
+                            placeholder="e.g., Honda Activa - AP01 AB 1234"
+                            required
+                        />
+                    </div>
+                )}
+
                 <button type="submit">Register</button>
                 <div className="form-link">
                     <Link to="/login">Already have an account? Login</Link>
