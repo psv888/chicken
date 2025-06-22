@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient'; // Make sure supabaseClient is imported
 import './Register.css';
 
-const ADMIN_EMAIL = 'admin@gmail.com';
-const ADMIN_PASSWORD = 'admin123';
+// Define the hardcoded admin email address
+const ADMIN_EMAIL = 'satyavardhanpasupuleti@gmail.com'; // <-- CHANGE THIS TO YOUR ADMIN'S EMAIL
 
 const AdminLogin = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false); // Add loading state
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -15,17 +17,35 @@ const AdminLogin = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        if (
-            formData.email === ADMIN_EMAIL &&
-            formData.password === ADMIN_PASSWORD
-        ) {
-            navigate('/admin-home');
+        setLoading(true);
+
+        // Perform a real Supabase login
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+        });
+
+        if (signInError) {
+            setError(signInError.message || 'Invalid credentials');
+        } else if (data.user) {
+            // Check if the logged-in user is the designated admin
+            if (data.user.email === ADMIN_EMAIL) {
+                // Success: It's the admin, proceed to the dashboard
+                navigate('/admin-home');
+            } else {
+                // It's a valid user, but not the admin. Deny access.
+                setError('You do not have permission to access the admin panel.');
+                // Immediately log them out.
+                await supabase.auth.signOut();
+            }
         } else {
-            setError('Invalid admin credentials');
+            setError('An unknown error occurred during login.');
         }
+        
+        setLoading(false);
     };
 
     return (
@@ -42,6 +62,7 @@ const AdminLogin = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                     />
                 </div>
                 <div className="form-group">
@@ -53,12 +74,15 @@ const AdminLogin = () => {
                         value={formData.password}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                     />
                 </div>
-                <button type="submit">Login as Admin</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Login as Admin'}
+                </button>
             </form>
         </div>
     );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

@@ -18,13 +18,14 @@ export default function TiffinsPage() {
   const [orderDetails, setOrderDetails] = useState({ name: '', phone: '', address: '' });
   const [orderId, setOrderId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   ReactModal.setAppElement('#root');
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('admin_items')
         .select('*')
         .eq('section', 'tiffins');
@@ -54,21 +55,31 @@ export default function TiffinsPage() {
 
   async function handleOrderSubmit(e) {
     e.preventDefault();
-    // 1. Insert order
+    if (!currentUser) {
+      alert('You must be logged in to place an order.');
+      setPlacingOrder(false);
+      return;
+    }
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert([{
-        name: orderDetails.name,
-        phone: orderDetails.phone,
-        address: orderDetails.address,
-        total_price: cartTotal,
+          name: orderDetails.name || 'Test User',
+          phone: orderDetails.phone || '0000000000',
+          address: orderDetails.address || 'Test Address',
+          total_price: cartTotal,
+          status: 'pending',
+          user_id: currentUser.id,
       }])
       .select()
       .single();
+
     if (orderError) {
       alert('Order failed: ' + orderError.message);
+      setPlacingOrder(false);
       return;
     }
+
     // 2. Insert order_items
     const orderItems = cartItems.map(item => ({
       order_id: order.id,
@@ -86,6 +97,7 @@ export default function TiffinsPage() {
     setOrderId(order.id);
     clearCart();
     setCheckoutStep('confirm');
+    setPlacingOrder(false);
   }
 
   useEffect(() => {
@@ -182,73 +194,75 @@ export default function TiffinsPage() {
       <ReactModal
         isOpen={cartModalOpen}
         onRequestClose={() => setCartModalOpen(false)}
-        className="admin-menu-modal"
-        overlayClassName="admin-menu-modal-overlay"
-        contentLabel="Cart Modal"
+        className="cart-modal"
+        overlayClassName="cart-modal-overlay"
       >
-        <button className="admin-menu-modal-close" onClick={() => setCartModalOpen(false)}>&times;</button>
+        <button className="cart-modal-close" onClick={() => setCartModalOpen(false)}>&times;</button>
         <h2 style={{textAlign:'center', marginBottom:12}}>Your Cart</h2>
         {checkoutStep === 'cart' && (
           cartItems.length === 0 ? (
-            <div style={{color:'#888', textAlign:'center', fontSize:'1.1rem'}}>Your cart is empty.</div>
+            <div className="empty-cart-message">Your cart is empty.</div>
           ) : (
             <>
-              <div style={{marginBottom:18}}>
-                {cartItems.map((item, idx) => (
-                  <div key={item.dish.id} style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10, borderBottom:'1px solid #f0f0f0', paddingBottom:6}}>
-                    <span style={{fontWeight:500}}>{item.dish.name}</span>
-                    <span style={{color:'#1a73e8', fontWeight:600}}>₹{item.dish.price}</span>
-                    <div style={{display:'flex', alignItems:'center', gap:6}}>
-                      <button onClick={() => removeFromCart(item.dish)} disabled={!cart[item.dish.id]} style={{ padding: '2px 8px', fontSize: 18, borderRadius: 6, border: '1px solid #eee', background: '#fafbfc', cursor: cart[item.dish.id] ? 'pointer' : 'not-allowed', color: cart[item.dish.id] ? '#ff4d5a' : '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="material-icons">remove</span>
-                      </button>
-                      <span style={{ minWidth: 18, textAlign: 'center', fontWeight: 600 }}>{item.quantity}</span>
-                      <button onClick={() => addToCart(item.dish)} style={{ padding: '2px 8px', fontSize: 18, borderRadius: 6, border: '1px solid #eee', background: '#fafbfc', cursor: 'pointer', color: '#1a73e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="material-icons">add</span>
-                      </button>
+              <div className="cart-items">
+                {cartItems.map((item) => (
+                  <div key={item.dish.id} className="cart-item">
+                    <img src={item.dish.photo_url} alt={item.dish.name} />
+                    <div className="cart-item-details">
+                      <span>{item.dish.name}</span>
+                      <span className="cart-item-price">₹{item.dish.price}</span>
+                    </div>
+                    <div className="cart-item-controls">
+                      <button onClick={() => removeFromCart(item.dish)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => addToCart(item.dish)}>+</button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div style={{fontWeight:600, fontSize:'1.1rem', textAlign:'right', marginBottom:18}}>Total: <span style={{color:'#ff4d5a'}}>₹{cartTotal}</span></div>
-              <button onClick={() => setCheckoutStep('form')} style={{width:'100%', background:'#ff4d5a', color:'#fff', border:'none', borderRadius:8, padding:'12px 0', fontWeight:600, fontSize:'1.08rem', cursor:'pointer'}}>Checkout</button>
+              <div className="cart-summary">
+                <span>Total:</span>
+                <span>₹{cartTotal.toFixed(2)}</span>
+              </div>
+              <button onClick={handleOrderSubmit} className="checkout-btn">Checkout (Test)</button>
             </>
           )
         )}
         {checkoutStep === 'form' && (
-          <form onSubmit={handleOrderSubmit} style={{marginTop:8}}>
+          <form onSubmit={handleOrderSubmit} className="checkout-form">
+            <h3>Delivery Details</h3>
             <input
               type="text"
               placeholder="Name"
               value={orderDetails.name}
               onChange={e => setOrderDetails({ ...orderDetails, name: e.target.value })}
               required
-              style={{width:'100%', marginBottom:10, padding:8, borderRadius:6, border:'1px solid #eee'}} />
+            />
             <input
               type="text"
               placeholder="Phone"
               value={orderDetails.phone}
               onChange={e => setOrderDetails({ ...orderDetails, phone: e.target.value })}
               required
-              style={{width:'100%', marginBottom:10, padding:8, borderRadius:6, border:'1px solid #eee'}} />
+            />
             <textarea
               placeholder="Delivery Address"
               value={orderDetails.address}
               onChange={e => setOrderDetails({ ...orderDetails, address: e.target.value })}
               required
-              style={{width:'100%', marginBottom:10, padding:8, borderRadius:6, border:'1px solid #eee', minHeight:60}} />
-            <div style={{display:'flex', gap:10}}>
-              <button type="submit" style={{flex:1, background:'#ff4d5a', color:'#fff', border:'none', borderRadius:8, padding:'12px 0', fontWeight:600, fontSize:'1.08rem', cursor:'pointer'}}>Place Order</button>
-              <button type="button" onClick={() => setCheckoutStep('cart')} style={{flex:1, background:'#eee', color:'#444', border:'none', borderRadius:8, padding:'12px 0', fontWeight:600, fontSize:'1.08rem', cursor:'pointer'}}>Back</button>
+            />
+            <div className="form-actions">
+                <button type="button" onClick={() => setCheckoutStep('cart')} className="back-btn">Back to Cart</button>
+                <button type="submit" className="submit-btn">Submit Order</button>
             </div>
           </form>
         )}
         {checkoutStep === 'confirm' && (
-          <div style={{textAlign:'center', marginTop:24}}>
-            <h3 style={{color:'#1a7f37'}}>Order Confirmed!</h3>
-            <p>Your order ID: <b>{orderId}</b></p>
-            <p>Thank you for ordering, {orderDetails.name}!</p>
-            <button onClick={() => { setCheckoutStep('cart'); setCartModalOpen(false); }} style={{marginTop:18, background:'#ff4d5a', color:'#fff', border:'none', borderRadius:8, padding:'10px 28px', fontWeight:600, fontSize:'1.08rem', cursor:'pointer'}}>Close</button>
+          <div className="confirmation-step">
+            <h3>Order Confirmed!</h3>
+            <p>Your Order ID is <strong>{orderId}</strong>.</p>
+            <p>Thank you for your purchase!</p>
+            <button onClick={() => { setCheckoutStep('cart'); setCartModalOpen(false); }} className="close-btn">Close</button>
           </div>
         )}
       </ReactModal>

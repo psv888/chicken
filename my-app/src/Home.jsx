@@ -87,22 +87,30 @@ const Home = () => {
                 Your browser does not support the video tag.
             </video>
 
-            <header className="home-header">
-                <button className="back-btn" onClick={() => navigate(-1)} title="Back">
-                    <span className="material-icons">arrow_back</span>
+            <div className="header-wrapper">
+                <button className="back-btn" onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/login');
+                }} title="Logout">
+                    <span className="material-icons">logout</span>
                 </button>
-                <div className="search-container">
+                <div className="search-track-container">
                     <div className="search-bar">
                         <span className="search-icon material-icons">search</span>
                         <input
+                            className="search-input"
                             type="text"
-                            placeholder="Search for restaurants, cuisines or dishes..."
+                            placeholder="Search"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                    <div className="track-orders-container" onClick={() => navigate('/order-tracking')}>
+                        <span className="material-icons track-icon">local_shipping</span>
+                        <span className="track-orders-text">Track Orders</span>
+                    </div>
                 </div>
-            </header>
+            </div>
 
             <div className="carousel-container">
                 <div className="carousel">

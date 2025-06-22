@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 import ReactModal from 'react-modal';
+
+// Set the app element for accessibility
+if (process.env.NODE_ENV !== 'test') {
+  ReactModal.setAppElement('#root');
+}
 
 const sections = [
   { key: 'restaurants', label: 'Restaurants' },
@@ -13,6 +19,7 @@ const sections = [
 const BUCKET = 'admin-photos';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState({
     restaurants: [],
     biryani: [],
@@ -49,7 +56,6 @@ const AdminDashboard = () => {
   const [menuModalParent, setMenuModalParent] = useState(null);
   const parentCardRefs = useRef({});
   const [parentSearch, setParentSearch] = useState({}); // { sectionKey: searchString }
-  ReactModal.setAppElement('#root');
 
   // Fetch items from Supabase on mount
   useEffect(() => {
@@ -361,7 +367,13 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard-container">
-      <h2 className="admin-dashboard-title">Admin Dashboard</h2>
+      <div className="admin-dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <button className="order-management-btn" onClick={() => navigate('/admin/orders')}>
+          <span className="material-icons">inventory</span>
+          Order Management
+        </button>
+      </div>
       {loading && <div className="admin-loading-spinner">Loading...</div>}
       {success && <div className="admin-success-message">{success}</div>}
       {error && <div className="admin-error-message">{error}</div>}

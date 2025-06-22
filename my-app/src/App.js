@@ -1,43 +1,53 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './Home';
 import Register from './components/Register';
 import Login from './components/Login';
-import Home from './Home';
-import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
-import RestaurantsPage from './components/RestaurantsPage';
-import BiryaniPage from './components/BiryaniPage';
-import PicklesPage from './components/PicklesPage';
-import TiffinsPage from './components/TiffinsPage';
-import ParentMenuPage from './components/ParentMenuPage';
+import AdminLogin from './components/AdminLogin';
+import OrderTracking from './components/OrderTracking';
 import { CartProvider } from './CartContext';
 import './App.css';
+import AdminOrderManagement from './components/AdminOrderManagement';
+import DeliveryPersonnelLogin from './components/DeliveryPersonnelLogin';
+import DeliveryDashboard from './components/DeliveryDashboard';
+
+// Import the missing category page components
+import RestaurantsPage from './components/RestaurantsPage';
+import BiryaniPage from './components/BiryaniPage';
+import TiffinsPage from './components/TiffinsPage';
+import PicklesPage from './components/PicklesPage';
+import ParentMenuPage from './components/ParentMenuPage';
+
 
 function App() {
   return (
-    <CartProvider>
-      <video className="bg-video" autoPlay loop muted playsInline>
-        <source src="https://cdn.pixabay.com/video/2023/03/27/158011-814993095_large.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <Router>
+    <Router>
+      <CartProvider>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Existing Routes */}
+            <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin-home" element={<AdminDashboard />} />
+            <Route path="/admin/orders" element={<AdminOrderManagement />} />
+            <Route path="/delivery-login" element={<DeliveryPersonnelLogin />} />
+            <Route path="/delivery-dashboard" element={<DeliveryDashboard />} />
+            <Route path="/order-tracking" element={<OrderTracking />} />
+
+            {/* ADDED: Routes for the category pages */}
             <Route path="/restaurants" element={<RestaurantsPage />} />
             <Route path="/biryani" element={<BiryaniPage />} />
-            <Route path="/pickles" element={<PicklesPage />} />
             <Route path="/tiffins" element={<TiffinsPage />} />
-            <Route path="/parent/:id" element={<ParentMenuPage />} />
+            <Route path="/pickles" element={<PicklesPage />} />
+            <Route path="/parent-menu" element={<ParentMenuPage />} />
           </Routes>
         </div>
-      </Router>
-    </CartProvider>
+      </CartProvider>
+    </Router>
   );
 }
 

@@ -1,0 +1,92 @@
+/* New Styles for Order History Section */
+
+.past-orders-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 700px;
+  box-sizing: border-box;
+}
+
+.past-orders-card h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 25px;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.past-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.past-order-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+}
+
+.past-order-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.past-order-info strong {
+  font-size: 18px;
+  color: #343a40;
+}
+
+.past-order-info span {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.past-order-details {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: right;
+}
+
+.past-order-details > span:first-child {
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+  min-width: 60px;
+}
+
+.status-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  color: #fff;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+
+/* Color coding for different statuses */
+.status-tag.status-delivered { background-color: #28a745; }
+.status-tag.status-out-for-delivery,
+.status-tag.status-out_for_delivery { background-color: #ffc107; color: #333; }
+.status-tag.status-pending { background-color: #17a2b8; }
+.status-tag.status-confirmed { background-color: #007bff; }
+.status-tag.status-cancelled { background-color: #dc3545; }
+.status-tag.status-ready { background-color: #fd7e14; }
